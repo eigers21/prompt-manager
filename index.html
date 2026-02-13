@@ -7,9 +7,9 @@
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="PromptMgr">
+    <meta name="apple-mobile-web-app-title" content="プロンプト集">
     <meta name="description" content="AIプロンプトを管理・コピー・活用できるシンプルなWebアプリ">
-    <title>AI Prompt Manager</title>
+    <title>プロンプト集</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -105,6 +105,13 @@
             align-items: center;
             gap: 10px;
             color: var(--text-primary);
+            cursor: pointer;
+            transition: opacity var(--transition);
+            user-select: none;
+        }
+
+        .sidebar-header h1:hover {
+            opacity: 0.8;
         }
 
         .sidebar-header h1 .logo-icon {
@@ -726,9 +733,9 @@
     <div class="app">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h1>
+                <h1 id="app-title">
                     <span class="logo-icon">🐱</span>
-                    Prompt Manager
+                    プロンプト集
                 </h1>
                 <p>プロンプトを管理・活用 ✨</p>
             </div>
@@ -748,7 +755,7 @@
         </aside>
 
         <main class="main-content" id="content-area">
-            <div class="empty-state">
+            <div class="empty-state" id="home-view">
                 <div class="empty-icon">🌸</div>
                 <p>プロンプトを選択してください</p>
                 <span class="hint">左のリストからプロンプトを選ぶと、ここに内容が表示されます</span>
@@ -815,7 +822,8 @@
             const mobileToggle = document.getElementById('mobile-toggle');
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            const toast = document.getElementById('toast');
+            const appTitle = document.getElementById('app-title');
+            const homeViewHtml = contentArea.innerHTML;
 
             let prompts = PROMPTS;
             let activeId = null;
@@ -828,6 +836,17 @@
                 document.addEventListener('click', (e) => {
                     if (!e.target.closest('.content-actions')) closeDropdown();
                 });
+
+                if (appTitle) {
+                    appTitle.addEventListener('click', goHome);
+                }
+            }
+
+            function goHome() {
+                activeId = null;
+                renderList(prompts);
+                contentArea.innerHTML = homeViewHtml;
+                closeMobile();
             }
 
             function renderList(list) {
