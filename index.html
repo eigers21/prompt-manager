@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AIプロンプトを管理・コピー・活用できるシンプルなWebアプリ">
+  <title>AI Prompt Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Mobile Toggle -->
+  <button class="mobile-toggle" id="mobile-toggle" aria-label="メニューを開く">☰</button>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <div class="app">
+
+    <!-- ===== Sidebar ===== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1>
+          <span class="logo-icon">🤖</span>
+          Prompt Manager
+        </h1>
+        <p>プロンプトを管理・活用</p>
+      </div>
+
+      <div class="search-box">
+        <div class="search-input-wrapper">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" class="search-input" id="search-input" placeholder="プロンプトを検索…" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="prompt-list" id="prompt-list">
+        <!-- Dynamically populated -->
+      </div>
+
+      <div class="sidebar-footer" id="prompt-count">
+        読み込み中…
+      </div>
+    </aside>
+
+    <!-- ===== Main ===== -->
+    <main class="main-content" id="content-area">
+      <div class="empty-state">
+        <div class="empty-icon">💡</div>
+        <p>プロンプトを選択してください</p>
+        <span class="hint">左のリストからプロンプトを選ぶと、ここに内容が表示されます</span>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
