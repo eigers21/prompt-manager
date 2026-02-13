@@ -1,66 +1,974 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="AIプロンプトを管理・コピー・活用できるシンプルなWebアプリ">
-  <title>AI Prompt Manager</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="PromptMgr">
+    <meta name="description" content="AIプロンプトを管理・コピー・活用できるシンプルなWebアプリ">
+    <title>AI Prompt Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=M+PLUS+Rounded+1c:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f0f4ff;
+            --bg-secondary: #ffffff;
+            --bg-sidebar: #faf5ff;
+            --bg-card: #ffffff;
+            --bg-hover: #f3eeff;
+            --bg-input: #f8f6ff;
+            --text-primary: #3a3555;
+            --text-secondary: #6e6a85;
+            --text-muted: #a8a3c0;
+            --accent: #9b7dff;
+            --accent-glow: rgba(155, 125, 255, 0.2);
+            --accent-hover: #b49bff;
+            --accent-soft: rgba(155, 125, 255, 0.1);
+            --pink: #f9a8d4;
+            --pink-soft: rgba(249, 168, 212, 0.15);
+            --green: #6ee7b7;
+            --green-soft: rgba(110, 231, 183, 0.15);
+            --green-glow: rgba(110, 231, 183, 0.3);
+            --sky: #7dd3fc;
+            --sky-soft: rgba(125, 211, 252, 0.15);
+            --peach: #fdba74;
+            --peach-soft: rgba(253, 186, 116, 0.15);
+            --border: rgba(155, 125, 255, 0.12);
+            --border-hover: rgba(155, 125, 255, 0.25);
+            --radius-sm: 12px;
+            --radius-md: 16px;
+            --radius-lg: 20px;
+            --shadow-sm: 0 2px 12px rgba(155, 125, 255, 0.08);
+            --shadow-md: 0 4px 24px rgba(155, 125, 255, 0.12);
+            --shadow-lg: 0 8px 40px rgba(155, 125, 255, 0.15);
+            --sidebar-width: 300px;
+            --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: 'M PLUS Rounded 1c', 'Zen Maru Gothic', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f0f4ff 0%, #faf5ff 50%, #fef3f2 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow: hidden;
+            overscroll-behavior: none;
+        }
+
+        .app {
+            display: flex;
+            height: 100vh;
+            height: 100dvh;
+        }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            min-width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+            backdrop-filter: blur(16px);
+        }
+
+        .sidebar-header {
+            padding: 24px 20px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-primary);
+        }
+
+        .sidebar-header h1 .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #c4b5fd, #f9a8d4);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            box-shadow: 0 3px 14px rgba(196, 181, 253, 0.4);
+        }
+
+        .sidebar-header p {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            padding-left: 46px;
+        }
+
+        /* Search */
+        .search-box {
+            padding: 12px 16px;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-input-wrapper svg {
+            position: absolute;
+            left: 12px;
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 12px 10px 38px;
+            background: var(--bg-input);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 0.82rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        /* Prompt List */
+        .prompt-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .prompt-list::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .prompt-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .prompt-list::-webkit-scrollbar-thumb {
+            background: var(--border-hover);
+            border-radius: 5px;
+        }
+
+        .prompt-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background var(--transition), transform 0.15s ease, box-shadow var(--transition);
+            border: 1.5px solid transparent;
+            margin-bottom: 3px;
+        }
+
+        .prompt-item:hover {
+            background: var(--bg-hover);
+            box-shadow: var(--shadow-sm);
+            transform: translateX(3px);
+        }
+
+        .prompt-item:active {
+            transform: scale(0.98);
+        }
+
+        .prompt-item.active {
+            background: linear-gradient(135deg, rgba(196, 181, 253, 0.18), rgba(249, 168, 212, 0.12));
+            border-color: rgba(196, 181, 253, 0.35);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .prompt-item .item-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+            border: 1px solid var(--border);
+            transition: all var(--transition);
+        }
+
+        .prompt-item.active .item-icon {
+            background: linear-gradient(135deg, #c4b5fd, #f9a8d4);
+            border-color: transparent;
+            box-shadow: 0 2px 10px rgba(196, 181, 253, 0.35);
+        }
+
+        .prompt-item .item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .prompt-item .item-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .prompt-item .item-preview {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        /* ===== Main Content ===== */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            background: var(--bg-primary);
+        }
+
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .empty-icon {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, #ede9fe, #fce7f3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            border: 2px solid var(--border);
+            box-shadow: var(--shadow-md);
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .empty-state .hint {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .content-header {
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            background: var(--bg-secondary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .content-title-section {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .content-title-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #c4b5fd, #f9a8d4);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 3px 14px rgba(196, 181, 253, 0.35);
+            flex-shrink: 0;
+        }
+
+        .content-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .content-actions {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all var(--transition);
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn-copy {
+            background: linear-gradient(135deg, #a78bfa, #c084fc);
+            color: #fff;
+            box-shadow: 0 3px 14px rgba(167, 139, 250, 0.3);
+        }
+
+        .btn-copy:hover {
+            background: linear-gradient(135deg, #b49bff, #d8b4fe);
+            box-shadow: 0 5px 22px rgba(167, 139, 250, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-copy:active {
+            transform: translateY(0);
+        }
+
+        .btn-copy.copied {
+            background: linear-gradient(135deg, #6ee7b7, #34d399);
+            box-shadow: 0 3px 14px var(--green-glow);
+        }
+
+        .btn-ai {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1.5px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-ai:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-ai:active {
+            transform: translateY(0);
+        }
+
+        /* ===== AI Site Dropdown ===== */
+        .ai-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: var(--bg-card);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 8px;
+            box-shadow: var(--shadow-lg);
+            min-width: 220px;
+            z-index: 100;
+            opacity: 0;
+            transform: translateY(-8px) scale(0.96);
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        .ai-dropdown.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .ai-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: inherit;
+            transition: background var(--transition), color var(--transition), box-shadow var(--transition), transform 0.15s ease;
+            border: 1.5px solid transparent;
+        }
+
+        .ai-link:hover {
+            transform: translateX(4px);
+        }
+
+        .ai-link .ai-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            flex-shrink: 0;
+            transition: box-shadow var(--transition);
+        }
+
+        .ai-link .ai-label {
+            flex: 1;
+        }
+
+        .ai-link .ai-arrow {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            transition: color var(--transition), transform var(--transition);
+        }
+
+        .ai-link:hover .ai-arrow {
+            transform: translateX(3px);
+        }
+
+        /* Individual AI link hover colors */
+        .ai-link.gemini:hover {
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.08), rgba(52, 168, 83, 0.08));
+            border-color: rgba(66, 133, 244, 0.2);
+            color: #4285f4;
+        }
+
+        .ai-link.gemini .ai-icon {
+            background: linear-gradient(135deg, #e8f0fe, #e6f4ea);
+        }
+
+        .ai-link.gemini:hover .ai-icon {
+            box-shadow: 0 2px 12px rgba(66, 133, 244, 0.25);
+        }
+
+        .ai-link.gemini:hover .ai-arrow {
+            color: #4285f4;
+        }
+
+        .ai-link.chatgpt:hover {
+            background: rgba(16, 163, 127, 0.08);
+            border-color: rgba(16, 163, 127, 0.2);
+            color: #10a37f;
+        }
+
+        .ai-link.chatgpt .ai-icon {
+            background: #ecfdf5;
+        }
+
+        .ai-link.chatgpt:hover .ai-icon {
+            box-shadow: 0 2px 12px rgba(16, 163, 127, 0.25);
+        }
+
+        .ai-link.chatgpt:hover .ai-arrow {
+            color: #10a37f;
+        }
+
+        .ai-link.claude:hover {
+            background: rgba(204, 120, 74, 0.08);
+            border-color: rgba(204, 120, 74, 0.2);
+            color: #cc784a;
+        }
+
+        .ai-link.claude .ai-icon {
+            background: #fef7f0;
+        }
+
+        .ai-link.claude:hover .ai-icon {
+            box-shadow: 0 2px 12px rgba(204, 120, 74, 0.25);
+        }
+
+        .ai-link.claude:hover .ai-arrow {
+            color: #cc784a;
+        }
+
+        .ai-link.copilot:hover {
+            background: rgba(0, 120, 212, 0.08);
+            border-color: rgba(0, 120, 212, 0.2);
+            color: #0078d4;
+        }
+
+        .ai-link.copilot .ai-icon {
+            background: #e8f4fd;
+        }
+
+        .ai-link.copilot:hover .ai-icon {
+            box-shadow: 0 2px 12px rgba(0, 120, 212, 0.25);
+        }
+
+        .ai-link.copilot:hover .ai-arrow {
+            color: #0078d4;
+        }
+
+        /* Content Body */
+        .content-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .content-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .content-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .content-body::-webkit-scrollbar-thumb {
+            background: var(--border-hover);
+            border-radius: 6px;
+        }
+
+        .prompt-body-text {
+            background: var(--bg-card);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 28px 32px;
+            font-size: 0.92rem;
+            line-height: 1.85;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-family: inherit;
+            max-width: 800px;
+            box-shadow: var(--shadow-sm);
+            animation: fadeInUp 0.35s ease;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 12px 24px;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: 1.5px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -100%;
+                top: 0;
+                height: 100vh;
+                z-index: 100;
+                transition: left var(--transition);
+                box-shadow: var(--shadow-lg);
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .mobile-toggle {
+                display: flex;
+                position: fixed;
+                top: 16px;
+                left: 16px;
+                z-index: 2000;
+                width: 48px;
+                height: 48px;
+                background: var(--bg-card);
+                border: 1.5px solid var(--border);
+                border-radius: var(--radius-sm);
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                color: var(--text-primary);
+                font-size: 1.4rem;
+                box-shadow: var(--shadow-md);
+                transition: all var(--transition);
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+
+            .mobile-toggle:active {
+                transform: scale(0.9);
+                background: var(--bg-hover);
+            }
+
+            .content-header {
+                padding: 16px 20px;
+                padding-left: 64px;
+                flex-wrap: wrap;
+            }
+
+            .content-body {
+                padding: 20px;
+            }
+
+            .content-actions {
+                flex-direction: column;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-toggle {
+                display: none;
+            }
+
+            .sidebar-overlay {
+                display: none !important;
+            }
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.2);
+            z-index: 90;
+            backdrop-filter: blur(4px);
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+    </style>
 </head>
+
 <body>
 
-  <!-- Mobile Toggle -->
-  <button class="mobile-toggle" id="mobile-toggle" aria-label="メニューを開く">☰</button>
-  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <button class="mobile-toggle" id="mobile-toggle" aria-label="メニューを開く">☰</button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-  <div class="app">
+    <div class="app">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>
+                    <span class="logo-icon">🐱</span>
+                    Prompt Manager
+                </h1>
+                <p>プロンプトを管理・活用 ✨</p>
+            </div>
+            <div class="search-box">
+                <div class="search-input-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="search-input" id="search-input" placeholder="🔍 プロンプトを検索…"
+                        autocomplete="off">
+                </div>
+            </div>
+            <div class="prompt-list" id="prompt-list"></div>
+            <div class="sidebar-footer" id="prompt-count">読み込み中…</div>
+        </aside>
 
-    <!-- ===== Sidebar ===== -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <h1>
-          <span class="logo-icon">🤖</span>
-          Prompt Manager
-        </h1>
-        <p>プロンプトを管理・活用</p>
-      </div>
+        <main class="main-content" id="content-area">
+            <div class="empty-state">
+                <div class="empty-icon">🌸</div>
+                <p>プロンプトを選択してください</p>
+                <span class="hint">左のリストからプロンプトを選ぶと、ここに内容が表示されます</span>
+            </div>
+        </main>
+    </div>
 
-      <div class="search-box">
-        <div class="search-input-wrapper">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input type="text" class="search-input" id="search-input" placeholder="プロンプトを検索…" autocomplete="off">
-        </div>
-      </div>
+    <div class="toast" id="toast"></div>
 
-      <div class="prompt-list" id="prompt-list">
-        <!-- Dynamically populated -->
-      </div>
+    <script>
+        // ============================================================
+        //  🔧 プロンプトデータ — ここを編集してください！
+        // ============================================================
+        const PROMPTS = [
+            {
+                id: 1,
+                title: "GSプレス校正ツール",
+                body: "あなたはプロの校正者であり、熟練のエディトリアルデザイナーです。\n以下の手順でチェックを行ってください。\n\n【★最重要：日付・事実の確認について】\n**現在の日付情報**: 本日は **{today_str} ({weekday_str}曜日)** です。\n日付や曜日を修正する際は、決して予測や勘で修正せず、必ずこの基準日からカレンダーを逆算して確認してください。\n**自信がない場合、またはカレンダーの根拠が不明確な場合は、曜日の修正提案をしないでください。**\n誤った修正（ハルシネーション）は最も避けるべきエラーです。\n\n【★重要：報告のルール】\n**問題のない箇所については、一切報告しないでください。**\n「〇〇については問題ありません」等の記述は不要です。修正が必要な箇所のみを指摘してください。\n\n【チェック優先順位】\n1. **【最優先】日付・数字・事実の矛盾**\n   - 曜日ズレ（上記の現在日付を基準に確認）、計算ミス、数値の不整合。\n\n2. **【重要】誤字脱字・不自然な表現**\n   - 誤変換、脱字、ら抜き言葉、二重表現、不適切な敬語。\n\n3. **【レイアウト・隠れ要素】**\n   - 画像の不自然な配置、背景と同色の文字、不自然な空白や行間。\n\n4. **【ルール確認】独自ルールの違反**\n   以下の「誤」があれば必ず「正」に直してください。\n   --------------------------------------------------\n    (\"上げる\", \"あげる\"), (\"あたって、～にあたり\", \"当たって、～に当たり\"), (\"有る\", \"ある\"), (\"在り方\", \"あり方\"), (\"いう\", \"言う\"),\n    (\"活かす\", \"生かす\"), (\"頂く\", \"いただく\"), (\"今\", \"いま\"), (\"色々\", \"いろいろ\"), (\"～の上\", \"～のうえ\"), (\"上手く\", \"うまく\"),\n    (\"お陰\", \"おかげ\"), (\"お客様\", \"お客さま\"), (\"おさめる\", \"納める\"), (\"おさめる\", \"収める\"), (\"おもに\", \"主に\"), (\"およぶ\", \"～に及ぶ\"),\n    (\"そのかいがあり\", \"その甲斐があり\"), (\"ヶ\", \"ヵ\"), (\"彼等\", \"彼ら\"), (\"気付く\", \"気づく\"), (\"今日\", \"きょう\"), (\"田中くん\", \"田中君\"),\n    (\"こころ\", \"心\"), (\"事\", \"こと\"), (\"今年\", \"ことし\"), (\"この頃\", \"このごろ\"), (\"頃\", \"ころ\"), (\"こわい\", \"怖い\"), (\"ささい\", \"些細\"),\n    (\"早速\", \"さっそく\"), (\"様々\", \"さまざま\"), (\"更なる\", \"さらなる\"), (\"従って\", \"したがって\"), (\"しょせん\", \"所詮\"), (\"既に\", \"すでに\"),\n    (\"全て\", \"すべて\"), (\"沢山\", \"たくさん\"), (\"食べ物\", \"食べもの\"), (\"為\", \"ため\"), (\"たよれる\", \"頼れる\"), (\"誰\", \"だれ\"),\n    (\"～通じて\", \"～つうじて\"), (\"作る\", \"つくる\"), (\"つくりあげる\", \"作り上げる\"), (\"繋ぐ\", \"つなぐ\"), (\"常\", \"つね\"), (\"辛い\", \"つらい、ツラい\"),\n    (\"出掛ける\", \"でかける\"), (\"等\", \"など\"), (\"～の通り\", \"～のとおり\"), (\"～の時\", \"～のとき\"), (\"ときには\", \"時には\"), (\"特に\", \"とくに\"),\n    (\"所\", \"ところ\"), (\"取扱い\", \"取り扱い\"), (\"中\", \"なか\"), (\"無い\", \"ない\"), (\"何\", \"なに、なん\"), (\"～にて\", \"～で\"), (\"図る\", \"はかる\"),\n    (\"引上げる\", \"引き上げる\"), (\"１人あたり\", \"１人当たり\"), (\"一人一人\", \"一人ひとり\"), (\"再び\", \"ふたたび\"), (\"普段\", \"ふだん\"),\n    (\"踏まえる\", \"ふまえる\"), (\"触れる\", \"ふれる\"), (\"他\", \"ほか\"), (\"ほしい\", \"欲しい\"), (\"本音\", \"ホンネ\"), (\"真心\", \"真ごころ\"),\n    (\"又\", \"また\"), (\"まったく\", \"全く\"), (\"見極める\", \"見きわめる\"), (\"自ら\", \"みずから\"), (\"みる\", \"見る\"), (\"みんな、皆さま\", \"みんな\", \"皆さん\", \"皆さま\"),\n    (\"～に向かう\", \"～へ\"), (\"無駄\", \"ムダ\"), (\"目指す\", \"目ざす\"), (\"最も\", \"もっとも\"), (\"基づく\", \"もとづく\"), (\"やさしい\", \"やさしい\"),\n    (\"止める\", \"やめる\"), (\"喜び\", \"よろこび\"), (\"世の中\", \"世のなか\"), (\"蘇る\", \"よみがえる\")\n   --------------------------------------------------\n\n5. **【アドバイス】デザイン改善**\n   - 視認性（フォント、余白）、情報の優先度（ジャンプ率）、配色の統一感について、より良くするためのプロの助言をください。\n\n6. **【この機関紙の要約】**この機関紙を項目ごとに要約してください。\n\n【出力形式】\n修正案は **太字** で強調し、最後に以下のCSVブロックを出力してください。\n```csv\n場所,重要度,原文,修正案,理由\n\"p.1\",\"高\",\"誤\",\"正\",\"理由\"\n...\n```"
+            },
+            {
+                id: 2,
+                title: "アプリ作成用",
+                body: "あなたはプロの「シニア製品マネージャー（PdM）」兼「フルスタックエンジニア」です。\nユーザーが抱いている抽象的なアプリのアイデアを、具体的で技術的な要件定義へと昇華させるための壁打ちパートナーとして振る舞ってください。\n\n<instructions>\n1. いきなりアプリの構成案やコードを出力しないでください。まずは、アイデアを明確にするために、私に対して「自己質問分解（Self-ask）」の手法を用いて質問を投げかけてください。\n2. 質問は一度に大量にせず、1〜3つ程度に絞って対話形式で進めてください。\n3. 私の回答を受けて、論理的な矛盾や実現可能性の懸念があれば、専門家として建設的に「突っ込み（指摘）」を入れてください。\n4. 最終的なゴールは、この対話を通じて「高精度な要件定義書」または「AIへの実装指示用プロンプト」を完成させることです。\n</instructions>\n\n<constraints>\n- 専門用語は適切に使いつつ、必要に応じて解説を加えてください。\n- 否定的な指示よりも「〜してください」という肯定的な指示（Positive Instructions）を優先してください。\n- トーンはプロフェッショナルかつ協力的で、私の思考を刺激するようなものにしてください。\n</constraints>\n\n<thought_process>\n回答を生成する前に、以下のステップで思考を整理してください：\n1. ユーザーの現在の入力から「決まっていること」と「曖昧なこと」を分類する。\n2. アプリの成功に不可欠な要素（ターゲット、主要機能、収益モデル、技術スタック等）のうち、欠けている情報を特定する。\n3. 次に投げかけるべき最も価値の高い質問を構築する。\n</thought_process>\n\n<initial_questions>\n壁打ちを開始するために、まずは以下の点から教えていただけますか？\n1. そのアプリが解決しようとしている「最大の課題」は何ですか？\n2. 主なユーザー層（ターゲット）は誰で、どのような場面で利用されますか？\n3. 「これだけは外せない」という核となる機能（MVP）を教えてください。\n</initial_questions>"
+            },
+            {
+                id: 3,
+                title: "脈絡のない会話の纏め用",
+                body: "あなたは極めて知的で感情を持たず、論理のみを追求する「厳しく優秀な上司」です。\nユーザーが入力する脈絡のない音声テキストや思考の断片を徹底的に解剖し、客観的な事実と論理のみに基づいて分析・指摘を行います。\n\n<instructions>\n1. 入力された断片的な情報をトピックごとに分類・構造化して要約してください。\n2. 内容に曖昧な点、論理的な矛盾、不足している要素があれば、丁寧に、しかし冷徹に「ツッコミ（指摘）」を入れてください。\n3. ユーザーが言語化できていない「真にやりたいこと（潜在的意図）」や「期待されている役割」を推論し、提示してください。\n4. 今日すべきことや今後のアクションについて、論理的根拠に基づいた優先順位を付けて指示してください。\n5. 必要に応じて、内容をブログ記事やプレゼン資料として再構成するための構成案を提案してください。\n</instructions>\n\n<constraints>\n- 感情的な励ましや共感は一切不要です。事実と論理のみを優先してください。\n- トーンは「丁寧かつ冷徹」に。\n- 「〜しないでください」という否定命令よりも「〜してください」という肯定的な指示に従ってください。\n- 出力は必ず以下の形式に従い、構造化してください。\n</constraints>\n\n<thought_process>\n回答を生成する前に、内部で以下のステップを踏んで論理を構築してください：\n1. 入力情報のエンティティ抽出とトピック分類。\n2. 各トピック間の因果関係および矛盾点の特定。\n3. ユーザーの最終目的（ゴール）に関する仮説の構築。\n4. ブログ・発表資料化の有用性の判定。\n</thought_process>\n\n<output_format>\n■ 思考の構造化要約\n（脈略のない話を論理的なカテゴリ別に整理）\n\n■ 論理的欠陥・不足箇所の指摘\n（厳しい先輩としての鋭い突っ込み）\n\n■ 優先順位付きネクストアクション\n（今日なすべきことの順位と理由）\n\n■ AI独自の分析と見解\n（潜在的な意図の言語化とアドバイス）\n\n■ アウトプットへの展開案\n（ブログ・発表資料化の構成案と声がけ）\n</output_format>"
+            },
+            {
+                id: 4,
+                title: "旅行代理店",
+                body: "あなたは**プロのトラベルコンシェルジュ**です。以下の「背景情報」と「制約条件」に基づき、私にとって最高の思い出になる**旅行の最適プラン**を提案してください。\n\n**# 背景情報:**\n・**目的地：** [北海道、沖縄、大阪など]\n・**時期・期間：** [2026年3月中]\n・**同行者：** [例：夫婦と15歳の娘と11歳の子供1人]\n・**旅行の目的：** [例：自然を楽しむ、星を観察、テーマパークにいくなど]\n\n**# 制約条件:**\n・**予算：** [例：1人あたり10万円以内、全体で50万円まで]\n・**交通手段：** [新幹線、飛行機]\n・**宿泊の希望：** [バイキングあり]\n・**食事の好み：** [特になし]\n・**ペース：** [特になし]\n\n**# 出力形式:**\n■ **1日目の行程（時間、場所、内容、移動手段）**\n■ **2日目の行程**\n■ **3日目の行程**\n■ **おすすめの宿泊施設・飲食店リスト**\n■ **アドバイス・注意点**\n■ **リンクがあればそこから確認できるように記述する**\n\n**# 実行指示:**\nまずは**ステップバイステップで論理的に思考の過程を記述**し、各日程のルートに無理がないか確認してから回答を出力してください。"
+            },
+            {
+                id: 5,
+                title: "Amazon購入用",
+                body: "# 命令書:\nあなたは**プロのショッピングコンシェルジュ兼商品アナリスト**です。以下の「対象商品」について、内容を深く理解し、多角的な分析を行った上で、私が「今」購入すべきかどうかを判断するための詳細なレポートを作成してください。\n\n# 制約条件:\n・回答を出す前に、必ず**ステップバイステップで論理的に思考のプロセスを記述**すること。\n・Webブラウジング機能を活用し、Amazon以外の外部レビューサイト（専門ブログ、Reddit、YouTube等）の評価も収集して反映させること。\n・**価格分析を重視**し、現在の価格が適正か、過去のセール価格と比較して高いか、待てば安くなる可能性（次回の大型セール等）を推測すること。\n・メリット（良い点）だけでなく、**デメリット（欠点・リスク）**を客観的な事実に基づき抽出すること。\n・トーンは誠実かつ専門的に。\n\n# 実行手順（Chain-of-Thought）:\n1. 提供されたURLから商品のスペックと特徴を抽出する。\n2. 他のレビューサイトを検索し、実際のユーザーの不満点や代替品の有無を確認する。\n3. 価格推移データを推論し、現在の価格の妥当性を評価する。\n4. 全情報を統合し、最終的な購入推奨度を判定する。\n\n# 出力形式:\n■ **商品概要と主要スペック**\n■ **多角的な評価（Amazon外のレビューを含む）**\n■ **価格分析（適正価格か、待つべきか）**\n■ **メリットとデメリットの比較表**\n■ **最終判定：購入すべきか否か（10点満点中何点か）**\n\n# 対象商品:\n\"\"\"\n[ここにAmazonのURLまたは商品名を入力]\n\"\"\""
+            },
+            {
+                id: 6,
+                title: "Amazonレビュー作成",
+                body: "# 命令書:\nあなたは**商品の魅力を伝えるプロのコピーライター兼、熱心なガジェット愛好家**です。以下の「私の断片的な感想」と「商品URL内の既存レビュー」を分析・統合し、読者が思わずカートに入れたくなるような、極めて自然で説得力のある長文レビューを作成してください。\n\n# 制約条件:\n・**AI特有の表現を徹底排除：** 「革新的な」「究極の」「～に間違いありません」といった定型句や過度な美辞麗句は使用しないでください。代わりに、実体験に基づいた具体的で少し「生っぽい」言葉を選んでください。\n・**既存レビューの統合：** 指定されたURLにアクセスし、他のユーザーが評価している「具体的なメリット」や「印象的なフレーズ」を1〜2箇所、自然な形で引用または参考にしてください。\n・**人間らしいリズム：** 文の長さを変え、適宜「…」「！」や話し言葉（～でした、～かも）を交え、機械的ではないリズムを作ってください。\n・**不完全性の演出：** 完璧すぎる褒め言葉ではなく、あえて「最初は半信半疑だった」「ここが少し惜しいけど、それを補って余りある」といった本音（Imperfection Heuristic）を交えてください。\n・**構成：** 「目を引くタイトル」「導入（購入の経緯）」「使用感の詳細」「他者の評価への同意」「結論」の順で構成してください。\n\n# 実行手順（Chain-of-Thought）:\n1. 商品URLから主要なセールスポイントと、人気レビューのキーワードを抽出する。\n2. 「私の断片的な感想」から、個人の固有エピソードを特定する。\n3. 抽出した要素を組み合わせ、論理的かつ感情に訴える構成案を作る。\n4. 制約条件を遵守して、AIっぽくない自然な長文レビューを書き上げる。\n\n# 入力情報:\n■ 私の断片的な感想（音声入力やメモ）\n\"\"\"\n[ここにあなたの脈絡のないテキストを貼り付け]\n\"\"\"\n\n■ 対象商品URL\n\"\"\"\n[ここにAmazonのURLを貼り付け]\n\"\"\"\n\n# 出力形式:\n■ レビュータイトル\n■ レビュー本文（長め）\n\n--------------------------------------------------------------------------------\nGeminiのGem用システム指示（System Instructions）\n<role>\nあなたは、商品の本質を見極め、消費者の心に響く「生の声」を言語化するプロのレビューアーです。\nユーザーの支離滅裂な感想から情熱を汲み取り、ウェブ上のリアルな評価と融合させ、AI生成であることを感じさせない高品質なAmazonレビューを作成します。\n</role>\n\n<instructions>\n1. ブラウジング機能を活用し、入力されたURLの商品の特徴と、実際の購入者の「良い文言」をサンプリングしてください。\n2. ユーザーの断片的な入力から、その人独自の視点や感情（「～が嬉しかった」「～で困っていた」等）を最優先でレビューに反映させてください。\n3. 回答前に必ず内部で思考の連鎖を行い、ユーザーの感想と外部レビューの整合性を確認してください。\n4. AIらしさを消すため、以下の言葉を禁止し、より日常的な日本語に置き換えてください：\n   - 「革新的」「効率的」「最適」「間違いなく」「さらに」「特筆すべき」\n</instructions>\n\n<thought_process>\n1. 商品の仕様と既存レビューのポジティブな偏りを分析。\n2. ユーザー入力を「感情」「ベネフィット」「具体的な状況」に分類。\n3. ユーザーの言葉遣いや癖を模倣（ミラーリング）し、文体に反映。\n4. デメリットをあえて1つだけ「惜しい点」として挙げ、全体の信頼性を高める。\n</thought_process>\n\n<output_format>\n■ 読ませるタイトル（「ついに見つけた」「もっと早く買えばよかった」等）\n■ レビュー本文（1000文字程度の熱量ある文章）\n</output_format>"
+            }
+        ];
 
-      <div class="sidebar-footer" id="prompt-count">
-        読み込み中…
-      </div>
-    </aside>
 
-    <!-- ===== Main ===== -->
-    <main class="main-content" id="content-area">
-      <div class="empty-state">
-        <div class="empty-icon">💡</div>
-        <p>プロンプトを選択してください</p>
-        <span class="hint">左のリストからプロンプトを選ぶと、ここに内容が表示されます</span>
-      </div>
-    </main>
+        // ============================================================
+        //  🌐 AIサイト一覧 — ここを編集してカスタマイズできます
+        // ============================================================
+        const AI_SITES = [
+            { name: "Gemini", url: "https://gemini.google.com/", icon: "✦", cls: "gemini" },
+            { name: "ChatGPT", url: "https://chatgpt.com/", icon: "◉", cls: "chatgpt" },
+            { name: "Claude", url: "https://claude.ai/", icon: "◈", cls: "claude" },
+            { name: "Copilot", url: "https://copilot.microsoft.com/", icon: "◆", cls: "copilot" }
+        ];
+        // ============================================================
 
-  </div>
+        document.addEventListener('DOMContentLoaded', () => {
+            const promptList = document.getElementById('prompt-list');
+            const contentArea = document.getElementById('content-area');
+            const promptCount = document.getElementById('prompt-count');
+            const searchInput = document.getElementById('search-input');
+            const mobileToggle = document.getElementById('mobile-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const toast = document.getElementById('toast');
 
-  <!-- Toast -->
-  <div class="toast" id="toast"></div>
+            let prompts = PROMPTS;
+            let activeId = null;
+            let toastTimeout = null;
+            let dropdownOpen = false;
 
-  <script src="app.js"></script>
+            function init() {
+                renderList(prompts);
+                promptCount.textContent = prompts.length + ' 件のプロンプト';
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.content-actions')) closeDropdown();
+                });
+            }
+
+            function renderList(list) {
+                promptList.innerHTML = '';
+                if (list.length === 0) {
+                    promptList.innerHTML = '<p style="padding:16px;color:var(--text-muted);font-size:0.82rem;text-align:center;">該当するプロンプトがありません 🔍</p>';
+                    return;
+                }
+                list.forEach((p) => {
+                    const el = document.createElement('div');
+                    el.className = 'prompt-item' + (p.id === activeId ? ' active' : '');
+                    el.setAttribute('role', 'button');
+                    el.setAttribute('tabindex', '0');
+                    el.innerHTML =
+                        '<div class="item-icon">📝</div>' +
+                        '<div class="item-info">' +
+                        '<div class="item-title">' + esc(p.title) + '</div>' +
+                        '<div class="item-preview">' + esc(p.body.substring(0, 50)) + '…</div>' +
+                        '</div>';
+                    el.addEventListener('click', () => selectPrompt(p));
+                    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectPrompt(p); } });
+                    promptList.appendChild(el);
+                });
+            }
+
+            function selectPrompt(prompt) {
+                activeId = prompt.id;
+                renderList(getFiltered());
+                renderContent(prompt);
+                closeMobile();
+            }
+
+            function renderContent(prompt) {
+                let aiLinksHtml = AI_SITES.map(s =>
+                    '<a href="' + s.url + '" target="_blank" rel="noopener noreferrer" class="ai-link ' + s.cls + '">' +
+                    '<span class="ai-icon">' + s.icon + '</span>' +
+                    '<span class="ai-label">' + s.name + '</span>' +
+                    '<span class="ai-arrow">→</span>' +
+                    '</a>'
+                ).join('');
+
+                contentArea.innerHTML =
+                    '<div class="content-header">' +
+                    '<div class="content-title-section">' +
+                    '<div class="content-title-icon">✨</div>' +
+                    '<h2 class="content-title">' + esc(prompt.title) + '</h2>' +
+                    '</div>' +
+                    '<div class="content-actions">' +
+                    '<button class="btn btn-copy" id="btn-copy" title="クリップボードにコピー">' +
+                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>' +
+                    'コピー' +
+                    '</button>' +
+                    '<button class="btn btn-ai" id="btn-ai" title="AIサイトを開く">' +
+                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>' +
+                    'AIサイトを開く ▾' +
+                    '</button>' +
+                    '<div class="ai-dropdown" id="ai-dropdown">' + aiLinksHtml + '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="content-body">' +
+                    '<div class="prompt-body-text">' + esc(prompt.body) + '</div>' +
+                    '</div>';
+
+                document.getElementById('btn-copy').addEventListener('click', () => copyText(prompt));
+                document.getElementById('btn-ai').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleDropdown();
+                });
+            }
+
+            function toggleDropdown() {
+                const dd = document.getElementById('ai-dropdown');
+                if (!dd) return;
+                dropdownOpen = !dropdownOpen;
+                dd.classList.toggle('show', dropdownOpen);
+            }
+            function closeDropdown() {
+                const dd = document.getElementById('ai-dropdown');
+                if (dd) dd.classList.remove('show');
+                dropdownOpen = false;
+            }
+
+            async function copyText(prompt) {
+                const btn = document.getElementById('btn-copy');
+                try {
+                    await navigator.clipboard.writeText(prompt.body);
+                    btn.classList.add('copied');
+                    btn.innerHTML =
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' +
+                        'コピー完了！';
+                    showToast('✅ クリップボードにコピーしました');
+                    setTimeout(() => {
+                        btn.classList.remove('copied');
+                        btn.innerHTML =
+                            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>' +
+                            'コピー';
+                    }, 2000);
+                } catch (e) { showToast('⚠ コピーに失敗しました'); }
+            }
+
+            searchInput.addEventListener('input', () => renderList(getFiltered()));
+            function getFiltered() {
+                const q = searchInput.value.trim().toLowerCase();
+                if (!q) return prompts;
+                return prompts.filter(p => p.title.toLowerCase().includes(q) || p.body.toLowerCase().includes(q));
+            }
+
+            function showToast(msg) {
+                toast.textContent = msg;
+                toast.classList.add('show');
+                clearTimeout(toastTimeout);
+                toastTimeout = setTimeout(() => toast.classList.remove('show'), 2500);
+            }
+
+            if (mobileToggle) {
+                const handleToggle = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log("Toggle clicked");
+                    sidebar.classList.toggle('open');
+                    overlay.classList.toggle('show');
+                };
+                // Use a single listener strategy to avoid double-firing
+                mobileToggle.addEventListener('pointerdown', handleToggle);
+            }
+            if (overlay) {
+                overlay.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();
+                    closeMobile();
+                });
+            }
+            function closeMobile() {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('show');
+            }
+
+            function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+            init();
+        });
+    </script>
 </body>
+
 </html>
