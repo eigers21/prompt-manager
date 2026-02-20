@@ -724,6 +724,127 @@
         .sidebar-overlay.show {
             display: block;
         }
+
+        /* ===== Modal Style ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+        .modal {
+            background: var(--bg-card);
+            width: 90%;
+            max-width: 600px;
+            border-radius: var(--radius-lg);
+            border: 1.5px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            padding: 24px;
+            transform: scale(0.95);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .modal-overlay.show .modal {
+            transform: scale(1);
+        }
+        .modal-header {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--border);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all var(--transition);
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1);
+        }
+        textarea.form-control {
+            min-height: 200px;
+            resize: vertical;
+        }
+        .modal-footer {
+            margin-top: 24px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Sidebar Add Button */
+        .btn-add-prompt {
+            width: 100%;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #a78bfa, #c084fc);
+            color: #fff;
+            padding: 12px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border-radius: var(--radius-md);
+            box-shadow: 0 4px 12px rgba(167, 139, 250, 0.25);
+        }
+        .btn-add-prompt:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(167, 139, 250, 0.35);
+        }
+
+        /* content action buttons extension */
+        .btn-edit {
+            background: var(--bg-card);
+            border: 1.5px solid var(--border);
+            color: var(--text-primary);
+        }
+        .btn-delete {
+            background: #fee2e2;
+            color: #ef4444;
+            border: 1.5px solid #fecaca;
+        }
+        .btn-delete:hover {
+            background: #fecaca;
+            color: #dc2626;
+        }
     </style>
 </head>
 
@@ -740,6 +861,11 @@
                     プロンプト集
                 </h1>
                 <p>プロンプトを管理・活用 ✨</p>
+            </div>
+            <div style="padding: 0 16px;">
+                <button class="btn btn-add-prompt" id="btn-new-prompt">
+                    <span>+</span> 新規作成
+                </button>
             </div>
             <div class="search-box">
                 <div class="search-input-wrapper">
@@ -766,6 +892,28 @@
     </div>
 
     <div class="toast" id="toast"></div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">プロンプトを編集</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="input-title">タイトル</label>
+                <input type="text" id="input-title" class="form-control" placeholder="例: 文章を要約する">
+            </div>
+            <div class="form-group">
+                <label for="input-body">プロンプト本文</label>
+                <textarea id="input-body" class="form-control" placeholder="ここにプロンプトの内容を入力してください"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ai" id="btn-modal-cancel">キャンセル</button>
+                <button class="btn btn-copy" id="btn-modal-save">保存する</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // ============================================================
@@ -809,9 +957,9 @@
         //  🌐 AIサイト一覧 — ここを編集してカスタマイズできます
         // ============================================================
         const AI_SITES = [
-            { name: "Gemini", url: "https://gemini.google.com/", icon: "✦", cls: "gemini", scheme: "googleapp://gemini" },
+            { name: "Gemini", url: "https://gemini.google.com/", icon: "✦", cls: "gemini", scheme: "googleapp://" },
             { name: "ChatGPT", url: "https://chatgpt.com/", icon: "◉", cls: "chatgpt", scheme: "chatgpt://" },
-            { name: "Claude", url: "https://claude.ai/", icon: "◈", cls: "claude" },
+            { name: "Claude", url: "https://claude.ai/", icon: "◈", cls: "claude", scheme: "claude-ai://" },
             { name: "Copilot", url: "https://copilot.microsoft.com/", icon: "◆", cls: "copilot", scheme: "ms-copilot://" }
         ];
         // ============================================================
@@ -827,10 +975,37 @@
             const appTitle = document.getElementById('app-title');
             const homeViewHtml = contentArea.innerHTML;
 
-            let prompts = PROMPTS;
+            const modalOverlay = document.getElementById('modal-overlay');
+            const modalTitle = document.getElementById('modal-title');
+            const inputTitle = document.getElementById('input-title');
+            const inputBody = document.getElementById('input-body');
+            const btnNewPrompt = document.getElementById('btn-new-prompt');
+            const btnModalSave = document.getElementById('btn-modal-save');
+            const btnModalCancel = document.getElementById('btn-modal-cancel');
+            const modalClose = document.getElementById('modal-close');
+
+            const STORAGE_KEY = 'ai_prompts_data';
+            let prompts = loadData();
             let activeId = null;
+            let currentEditId = null;
             let toastTimeout = null;
             let dropdownOpen = false;
+
+            function loadData() {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    try {
+                        return JSON.parse(saved);
+                    } catch (e) {
+                        console.error("Failed to parse localStorage data", e);
+                    }
+                }
+                return PROMPTS; // 初期データを使用
+            }
+
+            function saveData() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(prompts));
+            }
 
             function init() {
                 renderList(prompts);
@@ -842,6 +1017,82 @@
                 if (appTitle) {
                     appTitle.addEventListener('click', goHome);
                 }
+
+                btnNewPrompt.addEventListener('click', () => openModal());
+                btnModalSave.addEventListener('click', handleSave);
+                btnModalCancel.addEventListener('click', closeModal);
+                modalClose.addEventListener('click', closeModal);
+                modalOverlay.addEventListener('click', (e) => {
+                    if (e.target === modalOverlay) closeModal();
+                });
+            }
+
+            function openModal(editItem = null) {
+                if (editItem) {
+                    modalTitle.textContent = 'プロンプトを編集';
+                    inputTitle.value = editItem.title;
+                    inputBody.value = editItem.body;
+                    currentEditId = editItem.id;
+                } else {
+                    modalTitle.textContent = '新規プロンプト作成';
+                    inputTitle.value = '';
+                    inputBody.value = '';
+                    currentEditId = null;
+                }
+                modalOverlay.classList.add('show');
+                inputTitle.focus();
+            }
+
+            function closeModal() {
+                modalOverlay.classList.remove('show');
+            }
+
+            function handleSave() {
+                const title = inputTitle.value.trim();
+                const body = inputBody.value.trim();
+
+                if (!title || !body) {
+                    showToast('⚠ タイトルと本文を入力してください');
+                    return;
+                }
+
+                if (currentEditId !== null) {
+                    // 更新
+                    const idx = prompts.findIndex(p => p.id === currentEditId);
+                    if (idx !== -1) {
+                        prompts[idx] = { ...prompts[idx], title, body };
+                        showToast('✅ 更新しました');
+                    }
+                } else {
+                    // 新規作成
+                    const newId = prompts.length > 0 ? Math.max(...prompts.map(p => p.id)) + 1 : 1;
+                    const newItem = { id: newId, title, body };
+                    prompts.push(newItem);
+                    activeId = newId; // 新規作成したものを選択状態に
+                    showToast('✅ 作成しました');
+                }
+
+                saveData();
+                renderList(getFiltered());
+                const targetPrompt = prompts.find(p => p.id === (currentEditId || activeId));
+                if (targetPrompt) renderContent(targetPrompt);
+                closeModal();
+                promptCount.textContent = prompts.length + ' 件のプロンプト';
+            }
+
+            function handleDelete(id) {
+                if (!confirm('このプロンプトを削除してもよろしいですか？')) return;
+                
+                prompts = prompts.filter(p => p.id !== id);
+                saveData();
+                
+                showToast('🗑 削除しました');
+                if (activeId === id) {
+                    goHome();
+                } else {
+                    renderList(getFiltered());
+                }
+                promptCount.textContent = prompts.length + ' 件のプロンプト';
             }
 
             function goHome() {
@@ -906,6 +1157,14 @@
                     'AIサイトを開く ▾' +
                     '</button>' +
                     '<div class="ai-dropdown" id="ai-dropdown">' + aiLinksHtml + '</div>' +
+                    '<button class="btn btn-edit" id="btn-edit" title="プロンプトを編集">' +
+                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg>' +
+                    '編集' +
+                    '</button>' +
+                    '<button class="btn btn-delete" id="btn-delete" title="プロンプトを削除">' +
+                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>' +
+                    '削除' +
+                    '</button>' +
                     '</div>' +
                     '</div>' +
                     '<div class="content-body">' +
@@ -913,6 +1172,8 @@
                     '</div>';
 
                 document.getElementById('btn-copy').addEventListener('click', () => copyText(prompt));
+                document.getElementById('btn-edit').addEventListener('click', () => openModal(prompt));
+                document.getElementById('btn-delete').addEventListener('click', () => handleDelete(prompt.id));
                 document.getElementById('btn-ai').addEventListener('click', (e) => {
                     e.stopPropagation();
                     toggleDropdown();
@@ -930,16 +1191,19 @@
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
                 if (isMobile) {
-                    // Start with basic URL to let Universal Links hook in
-                    // For Safari to trigger the app, sometimes window.location works better than window.open
-                    if (site.scheme && site.name === "ChatGPT") {
-                        // ChatGPT specific scheme attempt
+                    if (site.scheme) {
+                        // アプリ用URLスキームがある場合は、まずそちらを試行
                         window.location.href = site.scheme;
+
+                        // アプリが入っていない場合のフォールバック（ブラウザ版を開く）
                         setTimeout(() => {
-                            window.location.href = site.url;
-                        }, 500);
+                            // ページがまだフォーカスされている＝アプリが開かなかったと判断
+                            if (!document.hidden) {
+                                window.location.href = site.url;
+                            }
+                        }, 1000);
                     } else {
-                        // Standard Universal Link attempt
+                        // スキームがない場合は通常のURL（ユニバーサルリンクに期待）
                         window.location.href = site.url;
                     }
                 } else {
