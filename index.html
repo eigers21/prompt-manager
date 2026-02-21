@@ -738,10 +738,12 @@
             opacity: 0;
             transition: all 0.3s ease;
         }
+
         .modal-overlay.show {
             display: flex;
             opacity: 1;
         }
+
         .modal {
             background: var(--bg-card);
             width: 90%;
@@ -753,19 +755,23 @@
             transform: scale(0.95);
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
+
         .modal-overlay.show .modal {
             transform: scale(1);
         }
+
         .modal-header {
             margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+
         .modal-title {
             font-size: 1.1rem;
             font-weight: 700;
         }
+
         .modal-close {
             background: none;
             border: none;
@@ -773,9 +779,11 @@
             cursor: pointer;
             color: var(--text-muted);
         }
+
         .form-group {
             margin-bottom: 16px;
         }
+
         .form-group label {
             display: block;
             font-size: 0.82rem;
@@ -783,6 +791,7 @@
             margin-bottom: 6px;
             color: var(--text-secondary);
         }
+
         .form-control {
             width: 100%;
             padding: 10px 14px;
@@ -794,15 +803,18 @@
             font-size: 0.9rem;
             transition: all var(--transition);
         }
+
         .form-control:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1);
         }
+
         textarea.form-control {
             min-height: 200px;
             resize: vertical;
         }
+
         .modal-footer {
             margin-top: 24px;
             display: flex;
@@ -825,6 +837,7 @@
             border-radius: var(--radius-md);
             box-shadow: 0 4px 12px rgba(167, 139, 250, 0.25);
         }
+
         .btn-add-prompt:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 18px rgba(167, 139, 250, 0.35);
@@ -836,14 +849,148 @@
             border: 1.5px solid var(--border);
             color: var(--text-primary);
         }
+
         .btn-delete {
             background: #fee2e2;
             color: #ef4444;
             border: 1.5px solid #fecaca;
         }
+
         .btn-delete:hover {
             background: #fecaca;
             color: #dc2626;
+        }
+
+        /* ===== Loading Spinner ===== */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(240, 244, 255, 0.7);
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+            backdrop-filter: blur(4px);
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border: 4px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .loading-text {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== Confirm Modal ===== */
+        .confirm-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 4000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .confirm-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .confirm-box {
+            background: var(--bg-card);
+            width: 88%;
+            max-width: 400px;
+            border-radius: var(--radius-lg);
+            border: 1.5px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            padding: 24px;
+            text-align: center;
+            transform: scale(0.95);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .confirm-overlay.show .confirm-box {
+            transform: scale(1);
+        }
+
+        .confirm-icon {
+            font-size: 2.4rem;
+            margin-bottom: 12px;
+        }
+
+        .confirm-message {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .confirm-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        /* ===== Connection Status ===== */
+        .connection-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-top: 6px;
+        }
+
+        .connection-badge.online {
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+        }
+
+        .connection-badge.offline {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .connection-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .connection-badge.online .dot {
+            background: #059669;
+        }
+
+        .connection-badge.offline .dot {
+            background: #dc2626;
         }
     </style>
 </head>
@@ -893,6 +1040,24 @@
 
     <div class="toast" id="toast"></div>
 
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loading-text">読み込み中…</div>
+    </div>
+
+    <!-- Confirm Dialog -->
+    <div class="confirm-overlay" id="confirm-overlay">
+        <div class="confirm-box">
+            <div class="confirm-icon">⚠️</div>
+            <div class="confirm-message" id="confirm-message">本当に削除しますか？</div>
+            <div class="confirm-actions">
+                <button class="btn btn-ai" id="btn-confirm-cancel">キャンセル</button>
+                <button class="btn btn-delete" id="btn-confirm-ok">削除する</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal -->
     <div class="modal-overlay" id="modal-overlay">
         <div class="modal">
@@ -917,7 +1082,12 @@
 
     <script>
         // ============================================================
-        //  🔧 プロンプトデータ — ここを編集してください！
+        //  🔧 GAS API 設定 — デプロイ後のURLをここに設定してください！
+        // ============================================================
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxOMnEDPktU6iRtSBA6g8Xoz8hKsCjXg0VKhKaHWUURKdW1zuff2pQoquweNhgQBRPf/exec';
+
+        // ============================================================
+        //  🔧 フォールバック用プロンプトデータ（API接続不可時に使用）
         // ============================================================
         const PROMPTS = [
             {
@@ -984,32 +1154,109 @@
             const btnModalCancel = document.getElementById('btn-modal-cancel');
             const modalClose = document.getElementById('modal-close');
 
+            // ローディング＆確認モーダル用要素
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const loadingText = document.getElementById('loading-text');
+            const confirmOverlay = document.getElementById('confirm-overlay');
+            const confirmMessage = document.getElementById('confirm-message');
+            const btnConfirmOk = document.getElementById('btn-confirm-ok');
+            const btnConfirmCancel = document.getElementById('btn-confirm-cancel');
+
             const STORAGE_KEY = 'ai_prompts_data';
-            let prompts = loadData();
+            let prompts = [];
             let activeId = null;
             let currentEditId = null;
             let toastTimeout = null;
             let dropdownOpen = false;
+            let isOnline = false; // GAS API 接続状態
 
-            function loadData() {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                if (saved) {
+            // ============================================================
+            //  🔄 ローディング表示ヘルパー
+            // ============================================================
+            function showLoading(msg = '読み込み中…') {
+                loadingText.textContent = msg;
+                loadingOverlay.classList.add('show');
+            }
+            function hideLoading() {
+                loadingOverlay.classList.remove('show');
+            }
+
+            // ============================================================
+            //  ✅ カスタム確認モーダル（confirm() の代替）
+            // ============================================================
+            function showConfirm(message) {
+                return new Promise((resolve) => {
+                    confirmMessage.textContent = message;
+                    confirmOverlay.classList.add('show');
+                    const onOk = () => { cleanup(); resolve(true); };
+                    const onCancel = () => { cleanup(); resolve(false); };
+                    const cleanup = () => {
+                        confirmOverlay.classList.remove('show');
+                        btnConfirmOk.removeEventListener('click', onOk);
+                        btnConfirmCancel.removeEventListener('click', onCancel);
+                    };
+                    btnConfirmOk.addEventListener('click', onOk);
+                    btnConfirmCancel.addEventListener('click', onCancel);
+                });
+            }
+
+            // ============================================================
+            //  🌐 GAS API 通信ヘルパー
+            // ============================================================
+            function isApiConfigured() {
+                return API_URL && API_URL !== 'YOUR_GAS_WEB_APP_URL_HERE';
+            }
+
+            async function apiGet(action = 'list') {
+                const res = await fetch(API_URL + '?action=' + action);
+                return await res.json();
+            }
+
+            async function apiPost(payload) {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(payload)
+                });
+                return await res.json();
+            }
+
+            // ============================================================
+            //  💾 データ読み込み（API優先 → localStorage フォールバック）
+            // ============================================================
+            async function loadData() {
+                if (isApiConfigured()) {
                     try {
-                        return JSON.parse(saved);
+                        const result = await apiGet('list');
+                        if (result.success) {
+                            isOnline = true;
+                            // ローカルキャッシュも更新
+                            localStorage.setItem(STORAGE_KEY, JSON.stringify(result.data));
+                            return result.data;
+                        }
                     } catch (e) {
-                        console.error("Failed to parse localStorage data", e);
+                        console.warn('GAS API 接続失敗、ローカルデータを使用:', e);
                     }
                 }
-                return PROMPTS; // 初期データを使用
+                // フォールバック: localStorage → ハードコードデータ
+                isOnline = false;
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    try { return JSON.parse(saved); } catch (e) { /* ignore */ }
+                }
+                return PROMPTS;
             }
 
-            function saveData() {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(prompts));
-            }
+            // ============================================================
+            //  🚀 初期化
+            // ============================================================
+            async function init() {
+                showLoading('プロンプトを読み込み中…');
+                prompts = await loadData();
+                hideLoading();
 
-            function init() {
                 renderList(prompts);
-                promptCount.textContent = prompts.length + ' 件のプロンプト';
+                updateFooter();
                 document.addEventListener('click', (e) => {
                     if (!e.target.closest('.content-actions')) closeDropdown();
                 });
@@ -1027,6 +1274,16 @@
                 });
             }
 
+            function updateFooter() {
+                const badge = isOnline
+                    ? '<span class="connection-badge online"><span class="dot"></span>クラウド同期</span>'
+                    : '<span class="connection-badge offline"><span class="dot"></span>ローカルモード</span>';
+                promptCount.innerHTML = prompts.length + ' 件のプロンプト<br>' + badge;
+            }
+
+            // ============================================================
+            //  📝 モーダル操作
+            // ============================================================
             function openModal(editItem = null) {
                 if (editItem) {
                     modalTitle.textContent = 'プロンプトを編集';
@@ -1047,7 +1304,10 @@
                 modalOverlay.classList.remove('show');
             }
 
-            function handleSave() {
+            // ============================================================
+            //  💾 保存処理（API + ローカル）
+            // ============================================================
+            async function handleSave() {
                 const title = inputTitle.value.trim();
                 const body = inputBody.value.trim();
 
@@ -1056,45 +1316,85 @@
                     return;
                 }
 
-                if (currentEditId !== null) {
-                    // 更新
-                    const idx = prompts.findIndex(p => p.id === currentEditId);
-                    if (idx !== -1) {
-                        prompts[idx] = { ...prompts[idx], title, body };
+                showLoading('保存中…');
+
+                try {
+                    if (currentEditId !== null) {
+                        // === 更新 ===
+                        if (isOnline) {
+                            const result = await apiPost({ action: 'update', id: currentEditId, title, body });
+                            if (!result.success) throw new Error(result.error);
+                        }
+                        const idx = prompts.findIndex(p => p.id === currentEditId);
+                        if (idx !== -1) {
+                            prompts[idx] = { ...prompts[idx], title, body };
+                        }
                         showToast('✅ 更新しました');
+                    } else {
+                        // === 新規作成 ===
+                        let newId;
+                        if (isOnline) {
+                            const result = await apiPost({ action: 'add', title, body });
+                            if (!result.success) throw new Error(result.error);
+                            newId = result.id;
+                        } else {
+                            newId = prompts.length > 0 ? Math.max(...prompts.map(p => p.id)) + 1 : 1;
+                        }
+                        const newItem = { id: newId, title, body };
+                        prompts.push(newItem);
+                        activeId = newId;
+                        showToast('✅ 作成しました');
                     }
-                } else {
-                    // 新規作成
-                    const newId = prompts.length > 0 ? Math.max(...prompts.map(p => p.id)) + 1 : 1;
-                    const newItem = { id: newId, title, body };
-                    prompts.push(newItem);
-                    activeId = newId; // 新規作成したものを選択状態に
-                    showToast('✅ 作成しました');
-                }
 
-                saveData();
-                renderList(getFiltered());
-                const targetPrompt = prompts.find(p => p.id === (currentEditId || activeId));
-                if (targetPrompt) renderContent(targetPrompt);
-                closeModal();
-                promptCount.textContent = prompts.length + ' 件のプロンプト';
-            }
-
-            function handleDelete(id) {
-                if (!confirm('このプロンプトを削除してもよろしいですか？')) return;
-                
-                prompts = prompts.filter(p => p.id !== id);
-                saveData();
-                
-                showToast('🗑 削除しました');
-                if (activeId === id) {
-                    goHome();
-                } else {
+                    // ローカルキャッシュも更新
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(prompts));
                     renderList(getFiltered());
+                    const targetPrompt = prompts.find(p => p.id === (currentEditId || activeId));
+                    if (targetPrompt) renderContent(targetPrompt);
+                    closeModal();
+                    updateFooter();
+                } catch (e) {
+                    showToast('⚠ 保存に失敗しました: ' + e.message);
+                } finally {
+                    hideLoading();
                 }
-                promptCount.textContent = prompts.length + ' 件のプロンプト';
             }
 
+            // ============================================================
+            //  🗑 削除処理（カスタム確認モーダル使用）
+            // ============================================================
+            async function handleDelete(id) {
+                const ok = await showConfirm('このプロンプトを削除してもよろしいですか？');
+                if (!ok) return;
+
+                showLoading('削除中…');
+
+                try {
+                    if (isOnline) {
+                        const result = await apiPost({ action: 'delete', id });
+                        if (!result.success) throw new Error(result.error);
+                    }
+
+                    prompts = prompts.filter(p => p.id !== id);
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(prompts));
+
+                    showToast('🗑 削除しました');
+                    if (activeId === id) {
+                        goHome();
+                    } else {
+                        renderList(getFiltered());
+                    }
+                    updateFooter();
+                } catch (e) {
+                    showToast('⚠ 削除に失敗しました: ' + e.message);
+                } finally {
+                    hideLoading();
+                }
+            }
+
+            // ============================================================
+            //  🏠 ホーム画面
+            // ============================================================
             function goHome() {
                 activeId = null;
                 renderList(prompts);
@@ -1102,6 +1402,9 @@
                 closeMobile();
             }
 
+            // ============================================================
+            //  📋 リスト描画
+            // ============================================================
             function renderList(list) {
                 promptList.innerHTML = '';
                 if (list.length === 0) {
@@ -1132,6 +1435,9 @@
                 closeMobile();
             }
 
+            // ============================================================
+            //  📄 コンテンツ描画
+            // ============================================================
             function renderContent(prompt) {
                 let aiLinksHtml = AI_SITES.map(s =>
                     '<div class="ai-link ' + s.cls + '" data-site-idx="' + AI_SITES.indexOf(s) + '" role="button">' +
@@ -1187,6 +1493,9 @@
                 });
             }
 
+            // ============================================================
+            //  🔗 AIサイトを開く
+            // ============================================================
             function openAISite(site) {
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
@@ -1224,6 +1533,9 @@
                 dropdownOpen = false;
             }
 
+            // ============================================================
+            //  📋 コピー
+            // ============================================================
             async function copyText(prompt) {
                 const btn = document.getElementById('btn-copy');
                 try {
@@ -1242,6 +1554,9 @@
                 } catch (e) { showToast('⚠ コピーに失敗しました'); }
             }
 
+            // ============================================================
+            //  🔍 検索 & ユーティリティ
+            // ============================================================
             searchInput.addEventListener('input', () => renderList(getFiltered()));
             function getFiltered() {
                 const q = searchInput.value.trim().toLowerCase();
@@ -1256,15 +1571,16 @@
                 toastTimeout = setTimeout(() => toast.classList.remove('show'), 2500);
             }
 
+            // ============================================================
+            //  📱 モバイルサイドバー
+            // ============================================================
             if (mobileToggle) {
                 const handleToggle = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log("Toggle clicked");
                     sidebar.classList.toggle('open');
                     overlay.classList.toggle('show');
                 };
-                // Use a single listener strategy to avoid double-firing
                 mobileToggle.addEventListener('pointerdown', handleToggle);
             }
             if (overlay) {
