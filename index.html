@@ -1084,7 +1084,7 @@
         // ============================================================
         //  🔧 GAS API 設定 — デプロイ後のURLをここに設定してください！
         // ============================================================
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxOMnEDPktU6iRtSBA6g8Xoz8hKsCjXg0VKhKaHWUURKdW1zuff2pQoquweNhgQBRPf/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzUfQHfIez-YRS3zjhh407qetRKlUuwauBgtmqtDLAQjnt6Rj1YjXlmi4l3st1v17pw/exec';
 
         // ============================================================
         //  🔧 フォールバック用プロンプトデータ（API接続不可時に使用）
@@ -1201,24 +1201,39 @@
             }
 
             // ============================================================
-            //  🌐 GAS API 通信ヘルパー
+            //  🌐 GAS API 通信ヘルパー（JSONP方式でCORS回避）
             // ============================================================
             function isApiConfigured() {
                 return API_URL && API_URL !== 'YOUR_GAS_WEB_APP_URL_HERE';
             }
 
-            async function apiGet(action = 'list') {
-                const res = await fetch(API_URL + '?action=' + action);
-                return await res.json();
-            }
+            let jsonpCounter = 0;
+            function apiCall(params) {
+                return new Promise((resolve, reject) => {
+                    const callbackName = '_jsonpCb_' + (++jsonpCounter) + '_' + Date.now();
+                    const query = Object.entries(params)
+                        .map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v))
+                        .join('&');
+                    const url = API_URL + '?' + query + '&callback=' + callbackName;
 
-            async function apiPost(payload) {
-                const res = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify(payload)
+                    // グローバルコールバック関数を登録
+                    window[callbackName] = (data) => {
+                        // クリーンアップ
+                        delete window[callbackName];
+                        document.head.removeChild(script);
+                        resolve(data);
+                    };
+
+                    // scriptタグで読み込み（CORS制限を回避）
+                    const script = document.createElement('script');
+                    script.src = url;
+                    script.onerror = () => {
+                        delete window[callbackName];
+                        document.head.removeChild(script);
+                        reject(new Error('API通信に失敗しました'));
+                    };
+                    document.head.appendChild(script);
                 });
-                return await res.json();
             }
 
             // ============================================================
@@ -1227,7 +1242,7 @@
             async function loadData() {
                 if (isApiConfigured()) {
                     try {
-                        const result = await apiGet('list');
+                        const result = await apiCall({ action: 'list' });
                         if (result.success) {
                             isOnline = true;
                             // ローカルキャッシュも更新
@@ -1322,7 +1337,7 @@
                     if (currentEditId !== null) {
                         // === 更新 ===
                         if (isOnline) {
-                            const result = await apiPost({ action: 'update', id: currentEditId, title, body });
+                            const result = await apiCall({ action: 'update', id: currentEditId, title, body });
                             if (!result.success) throw new Error(result.error);
                         }
                         const idx = prompts.findIndex(p => p.id === currentEditId);
@@ -1334,7 +1349,7 @@
                         // === 新規作成 ===
                         let newId;
                         if (isOnline) {
-                            const result = await apiPost({ action: 'add', title, body });
+                            const result = await apiCall({ action: 'add', title, body });
                             if (!result.success) throw new Error(result.error);
                             newId = result.id;
                         } else {
@@ -1371,7 +1386,7 @@
 
                 try {
                     if (isOnline) {
-                        const result = await apiPost({ action: 'delete', id });
+                        const result = await apiCall({ action: 'delete', id });
                         if (!result.success) throw new Error(result.error);
                     }
 
