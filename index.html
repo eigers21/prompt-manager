@@ -1236,6 +1236,56 @@
                 });
             }
 
+            // 書き込み操作用（hidden iframe + form POST で長文データ対応）
+            function apiWrite(params) {
+                return new Promise((resolve, reject) => {
+                    const frameName = '_gasFrame_' + Date.now();
+                    const iframe = document.createElement('iframe');
+                    iframe.name = frameName;
+                    iframe.style.display = 'none';
+                    document.body.appendChild(iframe);
+
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = API_URL;
+                    form.target = frameName;
+
+                    // パラメータをhiddenフィールドとして追加
+                    Object.entries(params).forEach(([key, value]) => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = key;
+                        input.value = String(value);
+                        form.appendChild(input);
+                    });
+
+                    document.body.appendChild(form);
+
+                    // GAS処理完了を待ってクリーンアップ
+                    let resolved = false;
+                    iframe.onload = () => {
+                        if (resolved) return;
+                        resolved = true;
+                        setTimeout(() => {
+                            try { document.body.removeChild(iframe); } catch (e) { }
+                            try { document.body.removeChild(form); } catch (e) { }
+                            resolve({ success: true });
+                        }, 500);
+                    };
+
+                    // タイムアウト（10秒）
+                    setTimeout(() => {
+                        if (resolved) return;
+                        resolved = true;
+                        try { document.body.removeChild(iframe); } catch (e) { }
+                        try { document.body.removeChild(form); } catch (e) { }
+                        reject(new Error('APIタイムアウト'));
+                    }, 10000);
+
+                    form.submit();
+                });
+            }
+
             // ============================================================
             //  💾 データ読み込み（API優先 → localStorage フォールバック）
             // ============================================================
@@ -1337,8 +1387,7 @@
                     if (currentEditId !== null) {
                         // === 更新 ===
                         if (isOnline) {
-                            const result = await apiCall({ action: 'update', id: currentEditId, title, body });
-                            if (!result.success) throw new Error(result.error);
+                            await apiWrite({ action: 'update', id: currentEditId, title, body });
                         }
                         const idx = prompts.findIndex(p => p.id === currentEditId);
                         if (idx !== -1) {
@@ -1347,17 +1396,23 @@
                         showToast('✅ 更新しました');
                     } else {
                         // === 新規作成 ===
-                        let newId;
                         if (isOnline) {
-                            const result = await apiCall({ action: 'add', title, body });
-                            if (!result.success) throw new Error(result.error);
-                            newId = result.id;
-                        } else {
-                            newId = prompts.length > 0 ? Math.max(...prompts.map(p => p.id)) + 1 : 1;
+                            await apiWrite({ action: 'add', title, body });
+                            // サーバーから最新リストを再取得してIDを正確に反映
+                            try {
+                                const refreshed = await apiCall({ action: 'list' });
+                                if (refreshed.success) {
+                                    prompts = refreshed.data;
+                                    activeId = prompts[prompts.length - 1]?.id || null;
+                                }
+                            } catch (e) { /* 再取得失敗時はローカルで補完 */ }
                         }
-                        const newItem = { id: newId, title, body };
-                        prompts.push(newItem);
-                        activeId = newId;
+                        if (!isOnline) {
+                            const newId = prompts.length > 0 ? Math.max(...prompts.map(p => p.id)) + 1 : 1;
+                            const newItem = { id: newId, title, body };
+                            prompts.push(newItem);
+                            activeId = newId;
+                        }
                         showToast('✅ 作成しました');
                     }
 
@@ -1386,8 +1441,7 @@
 
                 try {
                     if (isOnline) {
-                        const result = await apiCall({ action: 'delete', id });
-                        if (!result.success) throw new Error(result.error);
+                        await apiWrite({ action: 'delete', id });
                     }
 
                     prompts = prompts.filter(p => p.id !== id);
